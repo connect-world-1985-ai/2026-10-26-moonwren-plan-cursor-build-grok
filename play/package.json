@@ -1,0 +1,6 @@
+{
+  "name": "moonwren",
+  "private": true,
+  "type": "module",
+  "description": "Moonwren, an original lantern-gate flight game"
+}

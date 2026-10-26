@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#140e22">
+  <title>Moonwren</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+  <div id="app">
+    <header class="bar">
+      <div class="titles">
+        <h1 id="title" data-i18n="title"></h1>
+        <p id="tagline" data-i18n="tagline"></p>
+      </div>
+      <div class="scores">
+        <span><span data-i18n="score"></span> <strong id="score">0</strong></span>
+        <span><span data-i18n="best"></span> <strong id="best">0</strong></span>
+      </div>
+      <div class="controls">
+        <button type="button" id="btn-lang"></button>
+        <button type="button" id="btn-mute"></button>
+        <button type="button" id="btn-pause" disabled></button>
+      </div>
+    </header>
+    <main id="stage">
+      <canvas id="game" width="480" height="720"></canvas>
+      <div id="overlay" class="overlay">
+        <p id="overlay-title"></p>
+        <p id="overlay-body"></p>
+        <button type="button" id="btn-primary"></button>
+      </div>
+      <p id="debug" hidden></p>
+    </main>
+    <footer>
+      <p id="howto" data-i18n="howTo"></p>
+      <p id="disclaimer" data-i18n="footer"></p>
+    </footer>
+  </div>
+  <p id="live" class="sr-only" aria-live="polite"></p>
+  <noscript><p>Moonwren needs JavaScript. 月鹪需要 JavaScript。</p></noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
