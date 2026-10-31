@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import {
   WORLD, difficulty, spawnEvery, stepBird, clampCeiling, circleHitsRect,
-  hitsWorld, randomGapTop, takeScore, floorY,
+  circleHitsEllipse, lanternEllipses, gateRects, hitsWorld, randomGapTop, takeScore, floorY,
 } from "../js/physics.js";
 
 const flapped = stepBird({ y: 100, vy: 400 }, 0.5, true);
@@ -61,5 +61,41 @@ const hitGate = [{ x: WORLD.BIRD_X - 10, gapTop: 40, gapH: 80, scored: false }];
 assert.equal(hitsWorld({ y: 20, vy: 0 }, hitGate, floor), "lantern");
 assert.equal(hitsWorld({ y: floor - 4, vy: 0 }, [], floor), "ground");
 assert.equal(hitsWorld({ y: 300, vy: 0 }, [{ x: 400, gapTop: 200, gapH: 196, scored: false }], floor), "");
+
+
+// --- Lantern hitbox matches the drawn ellipse (not the full column) ---
+assert.equal(circleHitsEllipse(0, 0, 5, 0, 0, 10, 10), true);
+assert.equal(circleHitsEllipse(30, 0, 5, 0, 0, 10, 10), false);
+
+// A typical mid-run gate: gap from y=200 to y=396 (gapH 196)
+const gate = { x: WORLD.BIRD_X - WORLD.GATE_W / 2, gapTop: 200, gapH: 196, scored: false };
+const [topE, botE] = lanternEllipses(gate, floor);
+const cols = gateRects(gate, floor);
+
+// Empty sky in the top column, well above the drawn lantern body: old rect would hit, ellipse must miss.
+const skyY = 20; // near the top of the column
+assert.equal(circleHitsRect(WORLD.BIRD_X, skyY, WORLD.BIRD_R, cols[0].x, cols[0].y, cols[0].w, cols[0].h), true,
+  "sanity: sky point sits inside the old full-column rect");
+assert.equal(hitsWorld({ y: skyY, vy: 0 }, [gate], floor), "",
+  "near-miss in empty sky above the top lantern must NOT collide");
+
+// Empty air in the bottom column, below the drawn lantern body toward the eaves.
+const airY = botE.ey + botE.ry + WORLD.BIRD_R + 8;
+assert.ok(airY + WORLD.BIRD_R < floor, "air point is still above the floor");
+assert.equal(circleHitsRect(WORLD.BIRD_X, airY, WORLD.BIRD_R, cols[1].x, cols[1].y, cols[1].w, cols[1].h), true,
+  "sanity: air point sits inside the old full-column rect");
+assert.equal(hitsWorld({ y: airY, vy: 0 }, [gate], floor), "",
+  "near-miss in empty air below the bottom lantern must NOT collide");
+
+// Through the glowing gap: clear.
+assert.equal(hitsWorld({ y: gate.gapTop + gate.gapH / 2, vy: 0 }, [gate], floor), "");
+
+// Visual overlap with the top lantern body centre: must collide.
+assert.equal(hitsWorld({ y: topE.ey, vy: 0 }, [gate], floor), "lantern",
+  "overlap with the drawn top lantern must collide");
+// Visual overlap with the bottom lantern body centre: must collide.
+assert.equal(hitsWorld({ y: botE.ey, vy: 0 }, [gate], floor), "lantern",
+  "overlap with the drawn bottom lantern must collide");
+
 
 console.log("physics.test.js PASS");

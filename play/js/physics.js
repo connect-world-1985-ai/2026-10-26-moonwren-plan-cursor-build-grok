@@ -57,6 +57,49 @@ export function circleHitsRect(cx, cy, r, x, y, w, h) {
   return dx * dx + dy * dy < r * r;
 }
 
+/** Axis-aligned ellipse vs circle (same formula as a scaled circle test). */
+export function circleHitsEllipse(cx, cy, r, ex, ey, rx, ry) {
+  if (rx <= 0 || ry <= 0) return false;
+  const dx = cx - ex;
+  const dy = cy - ey;
+  const R = r; // expand ellipse by bird radius via Minkowski: approx by growing rx,ry
+  const RX = rx + R;
+  const RY = ry + R;
+  return (dx * dx) / (RX * RX) + (dy * dy) / (RY * RY) < 1;
+}
+
+/**
+ * Lantern hit shapes match render.js draw call:
+ *   top:  lantern(gate.x, topH - topH*0.72, GATE_W, topH*0.72)
+ *   bot:  lantern(gate.x, botY, GATE_W, botH*0.7)
+ * where the body is an ellipse at (cx, y+h*0.5) with radii (w*0.4, max(8, h*0.28)).
+ * Empty sky above the top lantern and empty air below the bottom lantern are no longer fatal.
+ */
+export function lanternEllipses(gate, groundY) {
+  const topH = Math.max(24, gate.gapTop);
+  const topY = topH - topH * 0.72;
+  const topBodyH = topH * 0.72;
+  const botY = gate.gapTop + gate.gapH;
+  const botH = Math.max(24, groundY - botY);
+  const botBodyH = botH * 0.7;
+  const cx = gate.x + WORLD.GATE_W / 2;
+  return [
+    {
+      ex: cx,
+      ey: topY + topBodyH * 0.5,
+      rx: WORLD.GATE_W * 0.4,
+      ry: Math.max(8, topBodyH * 0.28),
+    },
+    {
+      ex: cx,
+      ey: botY + botBodyH * 0.5,
+      rx: WORLD.GATE_W * 0.4,
+      ry: Math.max(8, botBodyH * 0.28),
+    },
+  ];
+}
+
+/** Kept for callers that still want the old full-column boxes (tests / debug). */
 export function gateRects(gate, groundY) {
   return [
     { x: gate.x, y: 0, w: WORLD.GATE_W, h: gate.gapTop },
@@ -72,8 +115,8 @@ export function gateRects(gate, groundY) {
 export function hitsWorld(bird, gates, floorY) {
   if (bird.y + WORLD.BIRD_R >= floorY) return "ground";
   for (const gate of gates) {
-    for (const rect of gateRects(gate, floorY)) {
-      if (circleHitsRect(WORLD.BIRD_X, bird.y, WORLD.BIRD_R, rect.x, rect.y, rect.w, rect.h)) {
+    for (const e of lanternEllipses(gate, floorY)) {
+      if (circleHitsEllipse(WORLD.BIRD_X, bird.y, WORLD.BIRD_R, e.ex, e.ey, e.rx, e.ry)) {
         return "lantern";
       }
     }

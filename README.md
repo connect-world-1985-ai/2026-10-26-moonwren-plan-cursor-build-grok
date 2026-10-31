@@ -60,6 +60,8 @@ Add `?debug=1` to the game URL (`play/?debug=1`) to show the average frame time 
 
 ## Checks
 
+Lantern hitboxes match the drawn ellipses (see Gap log #1).
+
 ```sh
 cd play
 sha256sum -c SHA256SUMS
@@ -84,7 +86,7 @@ Places where the plan was ambiguous, wrong or incomplete, and what the builder f
 
 | # | Plan location | Issue | Filled in | Severity |
 | --- | --- | --- | --- | --- |
-| 1 | Step 3, collision and `render.js` | Hit boxes are the full lantern columns (sky top to gap, gap to floor), but each lantern is drawn on only part of its column, so empty-looking sky above the top lantern and below the bottom lantern is fatal. | Kept as written; the owner accepted the plan as written. | Moderate |
+| 1 | Step 3, collision and `render.js` | Hit boxes were the full lantern columns (sky top to gap, gap to floor), but each lantern is drawn as an ellipse on only part of its column, so empty-looking sky above the top lantern and below the bottom lantern was fatal. | **Fixed 2026-10-31:** `hitsWorld` now tests the bird against the same ellipses `render.js` draws (`lanternEllipses` / `circleHitsEllipse`). Near-misses in empty sky/air no longer kill; overlap with the drawn body still does. Covered by new asserts in `play/test/physics.test.js`. `play/SHA256SUMS` regenerated. | Fixed |
 | 2 | Steps 7 and 11 | The checklists need a person (listening, OS settings, network panel, a real phone) and give no automated method. | Playwright harness: audio graph hooks, pixel-based autopilot, CDP multi-touch, emulated tab hiding, Chrome phone emulation. | Moderate |
 | 3 | Step 7, frame time | The pass line (average of 16.7 ms or less) sits on the 60 Hz vsync floor, so normal timer jitter can fail it (16.72 ms seen once at a 2x pixel ratio). A test harness that reads pixels each frame pushes it to 16.9 ms. | Measured without the harness at a 1x desktop ratio: 16.67 ms, so it passed. `DPR_CAP` kept. | Moderate |
 | 4 | Step 7, the Tune row | "Quieter than a flap" is not measurable as written. | Checked the gains: tune 0.08 x 0.55 at most, flap 0.2. | Minor |
